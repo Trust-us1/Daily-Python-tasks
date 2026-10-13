@@ -1,0 +1,17 @@
+INTERVIEW TASK 1: API Status Monitor
+The Scenario (From your Senior Engineer):
+"We have an array of HTTP status codes coming in from the upstream API. I need you to parse it and save only the successful calls—which are 200 and 201—into a separate list. If you see a client error, like a 403 or 404, just skip it and keep processing. But if you hit a 500, that means their server is down. If that happens, halt the entire ingestion process immediately so we don't corrupt our database, and print a critical alert saying the upstream server failed. Print the saved successful calls at the end."
+
+Input Data:
+
+Python
+api_logs = [200, 201, 404, 200, 403, 500, 200]
+
+successful_calls = []
+for a in api_logs:
+    if a == 500:
+        print("Critical Alert: Upstream server failed")
+        break
+    if a == 200 or a == 201:
+        successful_calls.append(a)       
+print(successful_calls)
