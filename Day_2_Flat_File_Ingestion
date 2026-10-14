@@ -1,0 +1,26 @@
+The Scenario (From your Senior Engineer):
+"Our warehouse system dumps yesterday's inventory counts as a list of comma-separated strings. I need you to parse this data and extract just the Product ID and the Quantity, saving them together as tuples in a clean list. Make sure your script doesn't accidentally load the header row into the database. We also only want to ingest items that are in 'new' condition—if an item is marked 'damaged', skip it. Lastly, the upstream system occasionally bugs out and sends a 'SYSTEM_CORRUPT' condition. If you see that, halt the entire ingestion process immediately so we don't overwrite good data, and print a critical alert. Print the final clean stock list at the end."
+
+raw_inventory = [
+    "product_id,quantity,condition",
+    "P-101,50,new",
+    "P-102,0,damaged",
+    "P-103,15,new",
+    "P-104,99,SYSTEM_CORRUPT",
+    "P-105,20,new"
+]
+
+clean_stock = []
+
+for r in raw_inventory:
+  columns = r.split(",")
+  if columns[0] == "product_id":
+    continue
+  if columns[2] == "damaged":
+    continue
+  if columns[2] == "SYSTEM_CORRUPT":
+    print("CRITICAL ALERT: System corrupt")
+    break
+  clean_stock.append((columns[0], columns[1]))
+
+print(clean_stock)
