@@ -1,0 +1,28 @@
+The Scenario (From your Senior Security Engineer):
+"We get a daily dump of server access logs as comma-separated strings. I need you to build a parser that extracts the IP Address and the User ID, and saves them together as tuples in a clean list. Make sure you drop that header row before it gets to the database. Also, we only want to log 'success' actions—if a user's action 'failed', just skip it. Finally, if you ever see a status of 'BREACH_DETECTED', that means we have an active intrusion. Drop everything, halt the loop instantly, and print a critical alert. Print the list of valid sessions at the end."
+
+Input Data:
+
+Python
+server_logs = [
+    "ip_address,user_id,action,status",
+    "192.168.1.50,U-101,login,success",
+    "192.168.1.51,U-202,download,failed",
+    "192.168.1.52,U-303,login,success",
+    "10.0.0.99,UNKNOWN,root_access,BREACH_DETECTED",
+    "192.168.1.53,U-404,logout,success"
+]
+
+valid_sessions = []
+
+for s in server_logs:
+  columns = s.split(",")
+  if columns[0] == "ip_address":
+    continue
+  if columns[3] == "failed":
+    continue
+  if columns[3] == "BREACH_DETECTED":
+    print("CRITICAL ALERT: Halt Immediately")
+    break
+  valid_sessions.append((columns[0], columns[1]))
+print(valid_sessions)
