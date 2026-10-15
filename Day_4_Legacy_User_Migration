@@ -1,1 +1,34 @@
+The Scenario:
+"We are migrating user profiles from a legacy system. Parse this data dump and extract the User ID and the Email Address, saving them together as tuples in a clean list.
 
+Drop the header row. Only migrate users whose account status is 'active'—skip 'suspended' or anything else. If you encounter a 'FATAL_ERROR' status, halt the pipeline immediately. Print the final list of migrated users at the end."
+
+Input Data:
+
+Python
+legacy_users = [
+    "user_id,email,account_status",
+    "U-881,alice@domain.com,active",
+    "U-882,bob@domain.com,suspended",
+    "U-883,charlie@domain.com,active",
+    "U-884,david@domain.com,FATAL_ERROR",
+    "U-885,eve@domain.com,active"
+]
+
+migrated_users = []
+
+for l in legacy_users:
+  columns = l.split(",")
+  
+  if columns[0] == "user_id":
+    continue
+  
+  if columns[2] == "FATAL_ERROR":
+    print("CRITICAL ERROR: HALT ALL")
+    break
+    
+  if columns[2] != "active":
+    continue
+ 
+  migrated_users.append((columns[0], columns[1]))
+print(migrated_users)
