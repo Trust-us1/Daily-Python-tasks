@@ -1,0 +1,31 @@
+The Scenario (From your Senior Data Engineer):
+"We are pulling event data from a new web API. Instead of flat comma-separated strings, the API sends JSON payloads, which Python reads as Dictionaries. I need you to parse a list of these dictionaries.
+
+Extract the event_id and the user for every event, saving them as tuples in a clean list. We only want to process events where the action is 'purchase'. If the action is anything else, skip it. Be careful—one of the upstream microservices is failing, and occasionally sends a payload with a status_code of 500. If you see a 500 status code, drop everything and halt the pipeline immediately. Print the final list of purchases at the end."
+
+Input Data:
+
+Python
+api_payloads = [
+    {"event_id": "E1", "user": "alice", "action": "purchase", "status_code": 200},
+    {"event_id": "E2", "user": "bob", "action": "click", "status_code": 200},
+    {"event_id": "E3", "user": "charlie", "action": "purchase", "status_code": 200},
+    {"event_id": "E4", "user": "david", "action": "purchase", "status_code": 500},
+    {"event_id": "E5", "user": "eve", "action": "purchase", "status_code": 200}
+]
+
+valid_purchases = []
+
+for a in api_payloads:
+
+  if a["status_code"] == 500:
+    print("CRITICAL ALERT: upstream microservices failed")
+    break
+
+  if a["action"] !="purchase":
+    continue
+
+  valid_purchases.append((a["event_id"], a["user"]))
+
+print(valid_purchases)
+  
