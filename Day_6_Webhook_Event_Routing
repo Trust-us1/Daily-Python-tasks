@@ -1,0 +1,30 @@
+The Scenario (From your Lead Data Engineer):
+"We are ingesting real-time payment webhooks from our billing provider. The data arrives as a list of JSON payloads (dictionaries). I need you to parse this list and extract the txn_id and the amount for every transaction, saving them as tuples in a clean list.
+
+We only want to ingest transactions where the status is explicitly 'settled'—if it says 'processing' or anything else, skip it. However, our fraud detection service occasionally flags a payload with a status of 'FRAUD_ALERT'. If you see that status, freeze the pipeline immediately using a hard halt, and print a critical warning so we can lock down the account. Print the final list of settled transactions at the end."
+
+Input Data:
+
+Python
+webhooks = [
+    {"txn_id": "T100", "type": "subscription", "status": "settled", "amount": 50.0},
+    {"txn_id": "T101", "type": "refund", "status": "processing", "amount": -20.0},
+    {"txn_id": "T102", "type": "subscription", "status": "settled", "amount": 15.0},
+    {"txn_id": "T103", "type": "subscription", "status": "FRAUD_ALERT", "amount": 999.0},
+    {"txn_id": "T104", "type": "subscription", "status": "settled", "amount": 25.0}
+]
+
+settled_transactions = []
+
+for w in webhooks:
+  
+  if w["status"] == "FRAUD_ALERT":
+    print("CRITICAL ALERT: Halt Pipeline")
+    break
+    
+  if w["status"] != "settled":
+    continue
+       
+  settled_transactions.append((w["txn_id"],w["amount"]))
+
+print(settled_transactions)
