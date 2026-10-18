@@ -1,0 +1,44 @@
+The Prompt:
+Write a Python script to process a batch of JSON payloads from a volatile third-party marketing API. Extract the user_id, country, and spend for each user, saving them as tuples in a list called clean_users.
+
+Business Logic & Constraints:
+Only process users with a status of "active".
+If any payload has a status of "CRITICAL_FAILURE", immediately halt the entire pipeline and print a critical alert. Do not process any further records.
+
+The country and spend data are located inside a nested dictionary called metadata.
+
+If metadata is missing entirely, or if country is missing inside of it, safely default the country to "UNKNOWN".
+
+If metadata is missing entirely, or if spend is missing inside of it, safely default the spend to 0.
+
+Print the final clean_users list at the end.
+
+Input Data:
+
+Python
+raw_api_responses = [
+    {"user_id": "U-01", "status": "active", "metadata": {"country": "UK", "spend": 150}},
+    {"user_id": "U-02", "status": "inactive", "metadata": {"country": "US", "spend": 20}},
+    {"user_id": "U-03", "status": "active", "metadata": {"country": "CA"}},
+    {"user_id": "U-04", "status": "CRITICAL_FAILURE"},
+    {"user_id": "U-05", "status": "active", "metadata": {"spend": 300}}
+]
+
+clean_users = []
+
+for r in raw_api_responses:
+  
+  if r["status"] == "CRITICAL_FAILURE":
+    print("CRITICAL ALERT: Halt")
+    break
+    
+  if r["status"] != "active":
+    continue
+    
+  meta = r.get("metadata", {})
+  country = meta.get("country", "UNKNOWN")
+  spend = meta.get("spend", 0)
+  
+  clean_users.append((r["user_id"], country, spend))
+  
+print(clean_users)
