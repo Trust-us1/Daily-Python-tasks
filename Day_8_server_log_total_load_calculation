@@ -1,0 +1,44 @@
+The Prompt:
+Write a Python script to ingest a batch of server logs. Calculate the total_load (CPU + RAM) for each production server, saving them as tuples of (node_id, total_load) in a list called processed_nodes.
+
+Business Logic & Constraints:
+
+Only process logs where the env is exactly "production".
+
+If any server reports a status of "KERNEL_PANIC", immediately halt the pipeline (break) and print a critical alert.
+
+cpu and ram are inside a nested dictionary called metrics.
+
+The Type Trap: Some numeric values are sent as strings (e.g., "75" instead of 75). You must ensure both values are integers before adding them together (using int()).
+
+If metrics is missing entirely, or if cpu or ram are missing, safely default the missing values to 0.
+
+Print the final processed_nodes list at the very end.
+
+Input Data:
+
+Python
+server_logs = [
+    {"node_id": "PROD-01", "env": "production", "status": "online", "metrics": {"cpu": 80, "ram": 60}},
+    {"node_id": "DEV-02", "env": "development", "status": "online", "metrics": {"cpu": 95, "ram": 90}},
+    {"node_id": "PROD-03", "env": "production", "status": "online", "metrics": {"cpu": "75"}}, 
+    {"node_id": "PROD-04", "env": "production", "status": "KERNEL_PANIC"},
+    {"node_id": "PROD-05", "env": "production", "status": "online", "metrics": {"cpu": 50, "ram": 50}}
+]
+
+processed_nodes = []
+
+for s in server_logs:
+  if s["status"] == "KERNEL_PANIC":
+    print("CRITICAL ALERT: Halt Production")
+    break
+  if s["env"] != "production":
+    continue
+  m = s.get("metrics", {})
+  cpu = int(m.get("cpu", 0))
+  ram = int(m.get("ram", 0))
+  total_node = cpu + ram
+  processed_nodes.append((s["node_id"], total_node))
+  
+print(processed_nodes)
+  
