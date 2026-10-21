@@ -1,0 +1,50 @@
+The Scenario:
+"We are ingesting real-time clickstream events from our e-commerce platform. I need you to calculate the total transaction revenue for every valid purchase, saving them as tuples of (user_id, revenue) in a clean list.
+
+Here is the problem: the front-end engineers just shipped a bug. Some quantities are coming in as strings, some prices are coming in as strings, and sometimes fields are dropped entirely."
+
+Business Logic & Constraints:
+
+Only process events where the event type is exactly "purchase". Skip all others.
+
+If the system detects an event labeled "SECURITY_BREACH", immediately halt the pipeline to prevent corrupted data ingestion and print a critical alert.
+
+The price and quantity values are nested inside a dictionary called payload.
+
+The Math & Type Trap: You must calculate revenue = price * quantity. However, you must coerce price to a float() and quantity to an int() before doing the math, as the API sometimes sends them as strings.
+
+If payload is missing entirely, or if price or quantity are missing inside of it, safely default them to 0 (or 0.0).
+
+Print the final valid_revenue list at the very end.
+
+Input Data:
+
+Python
+events = [
+    {"user_id": "U-100", "event": "purchase", "payload": {"price": 15.50, "quantity": 2}},
+    {"user_id": "U-101", "event": "click", "payload": {"price": 10.00, "quantity": 1}},
+    {"user_id": "U-102", "event": "purchase", "payload": {"price": "20.00"}}, # Missing quantity!
+    {"user_id": "U-103", "event": "SECURITY_BREACH"}, # Emergency Stop!
+    {"user_id": "U-104", "event": "purchase", "payload": {"price": 50.0, "quantity": "3"}} # String quantity!
+]
+
+valid_revenue = []
+
+for v in events:
+  
+  if v["event"] == "SECURITY_BREACH":
+    print("CRITICAL ALERT: STOP!")
+    break
+    
+  if v["event"] != "purchase":
+    continue
+    
+  p = v.get("payload", {})
+  
+  quantity = int(p.get("quantity", 0))
+  price = float(p.get("price", 0.0))
+  
+  revenue = price * quantity
+  valid_revenue.append((v["user_id"], revenue))
+
+print(valid_revenue)
