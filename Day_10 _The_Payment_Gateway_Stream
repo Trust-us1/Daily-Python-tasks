@@ -1,0 +1,47 @@
+The Scenario:
+"We are streaming a massive feed of payment gateway logs from a Kafka topic. To simulate the stream locally, we have loaded a small batch of events into a list called transaction_stream.
+
+Your job is to calculate the net_revenue (which is amount - fee) for each valid credit card transaction, saving them as tuples of (txn_id, net_revenue) in a list called cleared_txns."
+
+Business Logic & Constraints:
+
+Only process transactions where the method is exactly "credit_card". Skip all others.
+
+We have a known bad actor trying to inject malicious code. If you encounter a txn_id of exactly "TXN-999-BREACH", immediately halt the entire pipeline (break) and print a critical alert.
+
+The amount and fee are located inside a nested dictionary called financials.
+
+The Type Trap: Some APIs send financial data as strings (e.g., "100.50"). You must coerce both amount and fee to floats (float()) before doing the math.
+
+If the financials dictionary is missing entirely, or if amount or fee are missing inside of it, safely default them to 0.0.
+
+Protect the server's I/O by only printing the final cleared_txns list once, at the very end of the script.
+
+Input Data:
+
+Python
+transaction_stream = [
+    {"txn_id": "T-001", "method": "credit_card", "financials": {"amount": 250.00, "fee": 5.00}},
+    {"txn_id": "T-002", "method": "paypal", "financials": {"amount": 50.00, "fee": 1.50}},
+    {"txn_id": "T-003", "method": "credit_card", "financials": {"amount": "100.00"}}, # Missing fee!
+    {"txn_id": "T-004", "method": "credit_card"}, # Missing financials completely!
+    {"txn_id": "TXN-999-BREACH", "method": "credit_card", "financials": {"amount": 9999.00, "fee": 0.00}}, # EMERGENCY STOP
+    {"txn_id": "T-005", "method": "credit_card", "financials": {"amount": "500.00", "fee": "10.00"}} # String types!
+]
+
+cleared_txns = []
+
+for t in transaction_stream:
+  
+  if t["txn_id"] == "TXN-999-BREACH":
+    print("CRITICAL ERROR: HALT ALL")
+    break
+  if t["method"] != "credit_card":
+    continue
+  f = t.get("financials", {})
+  amount = float(f.get("amount", 0.0))
+  fee = float(f.get("fee", 0.0))
+  net_revenue = amount - fee
+  cleared_txns.append((t["txn_id"], net_revenue))
+  
+print(cleared_txns)
