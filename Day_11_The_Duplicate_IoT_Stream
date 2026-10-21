@@ -1,0 +1,60 @@
+Today, we add a critical new concept to your Data Engineering stack: Deduplication.
+
+In modern cloud architecture (like Kafka or AWS Kinesis), data is almost always delivered "at-least-once." This means network blips will frequently cause the API to send you the exact same JSON payload twice. If you ingest both, your database will have duplicate records, ruining the downstream analytics. You must filter out duplicates on the fly.
+
+The Scenario:
+"We are streaming JSON payloads from an array of IoT weather sensors. We need to extract the temp and humidity for ambient temperature readings, saving them as tuples of (event_id, temp, humidity) in a list called clean_readings.
+
+However, the message queue is repeating itself. You must use a tracking set (seen_events = set()) to ensure no event_id is processed more than once."
+
+Business Logic & Constraints:
+
+If any payload reports a status of exactly "CRITICAL_SHORT", immediately halt the pipeline (break) and print an alert.
+
+Only process records where the type is exactly "ambient_temp". Skip all others (continue).
+
+The Deduplication Trap: Check if the event_id is already inside seen_events. If it is, skip it. If it is not, add it to the set using seen_events.add(the_id) and proceed.
+
+Extract temp and humidity from the nested data dictionary. Default to 0.0 if missing.
+
+Coerce both metrics to float() to protect against string types.
+
+Print clean_readings only once at the end.
+
+Input Data:
+
+Python
+seen_events = set()
+clean_readings = []
+
+iot_stream = [
+    {"event_id": "E-01", "type": "ambient_temp", "status": "active", "data": {"temp": 22.5, "humidity": 40.0}},
+    {"event_id": "E-02", "type": "engine_temp", "status": "active", "data": {"temp": 95.0}}, 
+    {"event_id": "E-01", "type": "ambient_temp", "status": "active", "data": {"temp": 22.5, "humidity": 40.0}}, # DUPLICATE! Must be skipped.
+    {"event_id": "E-03", "type": "ambient_temp", "status": "active", "data": {"temp": "24.0", "humidity": "42.5"}}, # String types!
+    {"event_id": "E-04", "status": "CRITICAL_SHORT"}, # EMERGENCY STOP
+    {"event_id": "E-05", "type": "ambient_temp", "status": "active", "data": {"temp": 21.0}}
+]
+
+for i in iot_stream:
+  
+  if i["status"] == "CRITICAL_SHORT":
+    print("CRITICAL ALERT: Stop")
+    break
+    
+  if i["type"] != "ambient_temp":
+    continue
+  
+  event_id = i["event_id"]
+  if event_id in seen_events:
+    continue
+  seen_events.add(event_id)
+     
+  d = i.get("data",{})
+  temp = float(d.get("temp", 0.0))
+  humidity = float(d.get("humidity", 0.0))
+  clean_readings.append((i["event_id"], temp, humidity))
+
+print(clean_readings)
+
+
