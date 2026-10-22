@@ -1,0 +1,55 @@
+The Scenario:
+"We are streaming mobile data usage logs from a telecommunications tower. We need to calculate the total megabytes (MB) consumed by each individual user, but only for traffic on the 4G network.
+
+Instead of saving tuples to a list, you must aggregate the totals into a dictionary called user_totals. The final output should look like {'U-88': 351.0, 'U-92': 500.0}."
+
+Business Logic & Constraints:
+
+If the system reports a status of exactly "SYSTEM_FAILURE", immediately halt the pipeline (break) and print a critical alert.
+
+Only process logs where the protocol is exactly "4G". Skip all others (continue).
+
+The mb_used metric is nested inside the metrics dictionary.
+
+The Type Trap: Coerce mb_used to a float() to protect against string payloads. Default to 0.0 if it is missing.
+
+The Aggregation: Isolate the user_id. Use the aggregation pattern above to update the user_totals dictionary with the user's new total.
+
+Unindent and print the final user_totals dictionary exactly once at the end.
+
+Input Data:
+
+Python
+
+data_logs = [
+    {"session_id": "S1", "user_id": "U-88", "protocol": "4G", "status": "closed", "metrics": {"mb_used": 250.5}},
+    {"session_id": "S2", "user_id": "U-92", "protocol": "3G", "status": "closed", "metrics": {"mb_used": 50.0}}, # Wrong protocol!
+    {"session_id": "S3", "user_id": "U-88", "protocol": "4G", "status": "closed", "metrics": {"mb_used": "100.5"}}, # String type! Same user!
+    {"session_id": "S4", "user_id": "U-99", "status": "SYSTEM_FAILURE"}, # EMERGENCY STOP
+    {"session_id": "S5", "user_id": "U-95", "protocol": "4G", "status": "closed", "metrics": {"mb_used": 500.0}}
+]
+user_totals = {}
+
+for d in data_logs:
+    if d["status"] == "SYSTEM_FAILURE":
+        print("CRITICAL ERROR: Stop!!")
+        break
+        
+    if d["protocol"] != "4G":
+        continue
+
+    m = d.get("metrics", {})
+    mb_used = float(m.get("mb_used", 0.0))
+
+    user_id = d["user_id"]
+    current_total = user_totals.get(user_id, 0.0)
+    user_totals[user_id] = current_total + mb_used
+
+print(user_totals)
+    
+
+
+
+  
+
+
